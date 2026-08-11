@@ -2,6 +2,7 @@ package com.rishon.orderintegration.service;
 
 import com.rishon.orderintegration.client.FastShipClient;
 import com.rishon.orderintegration.dto.request.OrderRequest;
+import com.rishon.orderintegration.dto.request.ProductCreateRequest;
 import com.rishon.orderintegration.dto.response.OrderResponse;
 import com.rishon.orderintegration.dto.response.ProductResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +19,31 @@ public class OrderService {
 
     private final FastShipClient fastShipClient;
 
-    public OrderResponse createOrder(OrderRequest request) {
-        ProductResponse product = fastShipClient.getProduct();
-        log.info("Downstream product received: id={}, title={}, price={}",
-                product.getId(), product.getTitle(), product.getPrice());
+//    public OrderResponse createOrder(OrderRequest request) {
+//        ProductResponse product = fastShipClient.getProduct();
+//        log.info("Downstream product received: id={}, title={}, price={}",
+//                product.getId(), product.getTitle(), product.getPrice());
+//
+//        return new OrderResponse(request.getOrderId(), "RECEIVED");
+//    }
 
-        return new OrderResponse(request.getOrderId(), "RECEIVED");
+    public OrderResponse createOrder(OrderRequest request) {
+
+        ProductCreateRequest productRequest =
+                new ProductCreateRequest(
+                        request.getProduct(),
+                        1000.0
+                );
+
+        ProductResponse product =
+                fastShipClient.createProduct(productRequest);
+
+        log.info("Product created in downstream system: {}",
+                product.getId());
+
+        return new OrderResponse(
+                request.getOrderId(),
+                "RECEIVED"
+        );
     }
 }
