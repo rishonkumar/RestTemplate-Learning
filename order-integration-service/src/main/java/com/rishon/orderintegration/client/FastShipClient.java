@@ -68,7 +68,7 @@ public class FastShipClient {
          */
 
     public ProductResponse createProduct(ProductCreateRequest request) {
-        String url = "https://dummyjson.com/products/add";
+        String url = "http://localhost:8081/api/products";
 
         String accessToken = oAuthService.fetchAccessToken();
 
