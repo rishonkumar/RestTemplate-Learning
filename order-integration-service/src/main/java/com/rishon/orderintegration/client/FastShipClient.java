@@ -1,5 +1,6 @@
 package com.rishon.orderintegration.client;
 
+import com.rishon.orderintegration.auth.OAuthService;
 import com.rishon.orderintegration.dto.request.ProductCreateRequest;
 import com.rishon.orderintegration.dto.response.ProductResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,8 @@ public class FastShipClient {
 
     private final RestTemplate restTemplate;
 
+    private final OAuthService oAuthService;
+
     public ProductResponse getProduct() {
         log.info("Calling downstream API: {}", PRODUCT_URL);
 
@@ -37,14 +40,7 @@ public class FastShipClient {
         return response.getBody();
     }
 
-    public ProductResponse createProduct(ProductCreateRequest request) {
-        String url = "https://dummyjson.com/products/add";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("client-id","order-integration-service");
-
-        /*
+    /*
         HttpEntity
         │
         ├── Headers
@@ -54,7 +50,33 @@ public class FastShipClient {
         └── Body
              ├── title: Laptop
              └── price: 1000
+
+
+         After adding token it looks like this
+
+            HttpEntity
+            │
+            ├── Headers
+            │     ├── Authorization: Bearer abc123
+            │     ├── Content-Type: application/json
+            │     └── client-id: order-integration-service
+            │
+
+            └── Body
+                  ├── title
+                  └── price
          */
+
+    public ProductResponse createProduct(ProductCreateRequest request) {
+        String url = "https://dummyjson.com/products/add";
+
+        String accessToken = oAuthService.fetchAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization","Bearer " + accessToken);
+        headers.set("client-id","order-integration-service");
+
 
         HttpEntity<ProductCreateRequest> entity =
                 new HttpEntity<>(request, headers);
