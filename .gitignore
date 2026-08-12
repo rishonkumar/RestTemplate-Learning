@@ -1,0 +1,18 @@
+# IDE / build output
+out/
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.DS_Store
+
+# Maven
+**/target/
+*.class
+*.log
+*.jar
+*.war
+
+# Misc
+HELP.md

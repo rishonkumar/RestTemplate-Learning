@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class FastShipClient {
 
-    private static final String PRODUCT_URL = "https://dummyjson.com/products/1";
+    private static final String PRODUCT_URL = "http://localhost:8081/api/products";
 
     private final RestTemplate restTemplate;
 
