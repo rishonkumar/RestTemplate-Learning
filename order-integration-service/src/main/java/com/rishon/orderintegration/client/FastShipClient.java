@@ -3,11 +3,15 @@ package com.rishon.orderintegration.client;
 import com.rishon.orderintegration.auth.OAuthService;
 import com.rishon.orderintegration.dto.request.ProductCreateRequest;
 import com.rishon.orderintegration.dto.response.ProductResponse;
+import com.rishon.orderintegration.exception.DownstreamApiException;
+import com.rishon.orderintegration.exception.DownstreamServiceException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -21,7 +25,6 @@ public class FastShipClient {
 
     private static final String PRODUCT_URL = "http://localhost:8081/api/products";
     String url = "http://localhost:8081/api/products";
-
 
     private final RestTemplate restTemplate;
 
@@ -70,19 +73,42 @@ public class FastShipClient {
      * └── price
      */
 
-    public ProductResponse createProduct(ProductCreateRequest request) {
+    public ProductResponse createProduct(
+            ProductCreateRequest request) {
 
         String accessToken = oAuthService.fetchAccessToken();
 
         try {
-            return callCreateProduct(request, accessToken);
-        } catch(HttpClientErrorException.Unauthorized ex) {
-            log.warn("Unauthorized access to FastShip API. Refreshing token and retrying...");
-            
-            String newAccessToken = oAuthService.fetchAccessToken();
-            return callCreateProduct(request, newAccessToken);
-        }
+            return callCreateProduct(
+                    request,
+                    accessToken);
 
+        } catch (HttpClientErrorException.Unauthorized ex) {
+
+            log.warn(
+                    "Received 401 from FastShip. Refreshing token and retrying.");
+
+            String newAccessToken = oAuthService.fetchAccessToken();
+
+            try {
+                return callCreateProduct(request, newAccessToken);
+            } catch (HttpClientErrorException ex2) {
+
+                throw new DownstreamServiceException(
+                        "FastShip API failed after token refresh",
+                        ex2);
+            }
+
+        } catch (HttpClientErrorException ex) {
+            throw new DownstreamServiceException(
+                    "FastShip returned HTTP error: "
+                            + ex.getStatusCode(),
+                    ex);
+        } catch (ResourceAccessException ex) {
+            throw new DownstreamServiceException(
+                    "Unable to communicate with FastShip",
+                    ex);
+        }
     }
 
     private ProductResponse callCreateProduct(
@@ -95,13 +121,11 @@ public class FastShipClient {
         headers.set("client-id", "order-integration-service");
         HttpEntity<ProductCreateRequest> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<ProductResponse> response =
-            restTemplate.exchange(
-                        PRODUCT_URL,
-                        HttpMethod.POST,
-                        entity,
-        ProductResponse.class
-                );
+        ResponseEntity<ProductResponse> response = restTemplate.exchange(
+                PRODUCT_URL,
+                HttpMethod.POST,
+                entity,
+                ProductResponse.class);
 
         return response.getBody();
 
