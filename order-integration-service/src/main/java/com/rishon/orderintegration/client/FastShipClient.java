@@ -3,7 +3,6 @@ package com.rishon.orderintegration.client;
 import com.rishon.orderintegration.auth.OAuthService;
 import com.rishon.orderintegration.dto.request.ProductCreateRequest;
 import com.rishon.orderintegration.dto.response.ProductResponse;
-import com.rishon.orderintegration.exception.DownstreamApiException;
 import com.rishon.orderintegration.exception.DownstreamServiceException;
 
 import lombok.RequiredArgsConstructor;
