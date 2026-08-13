@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -21,6 +23,8 @@ public class FastShipOrderController {
 
     private final FastShipOrderService fastShipOrderService;
 
+    private final AtomicBoolean firstRequest = new AtomicBoolean(true);
+
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
             @RequestHeader(value = "Authorization", required = false) String authorization,
@@ -28,6 +32,10 @@ public class FastShipOrderController {
 
         if (authorization == null || !EXPECTED_AUTHORIZATION.equals(authorization)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (firstRequest.compareAndSet(true, false)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
         }
 
         ProductResponse response = fastShipOrderService.createProduct(request);
