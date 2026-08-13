@@ -1,5 +1,6 @@
 package com.rishon.orderintegration.config;
 
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -22,11 +23,12 @@ public class RestTemplateConfig {
     @Bean
     public RestTemplate restTemplate() {
 
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2, null).setResponseTimeout(Timeout.ofSeconds(5)).build();
 
-        PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create().build();
+        ConnectionConfig connectionConfig = ConnectionConfig.custom().setConnectTimeout(Timeout.ofSeconds(2)).build();
 
-        CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).setConnectionManager(connectionManager).build();
+        PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create().setDefaultConnectionConfig(connectionConfig).build();
+
+        CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager).setConnectionManager(connectionManager).build();
 
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
 
